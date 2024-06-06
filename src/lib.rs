@@ -29,6 +29,7 @@ use bevy::{
     prelude::*,
     text::BreakLineOn,
 };
+use copypasta::{ClipboardContext, ClipboardProvider};
 
 /// A Bevy `Plugin` providing the systems and assets required to make a [`TextInputBundle`] work.
 pub struct TextInputPlugin;
@@ -239,6 +240,7 @@ fn keyboard(
         &mut TextInputCursorTimer,
     )>,
     mut submit_writer: EventWriter<TextInputSubmitEvent>,
+    keys: Res<ButtonInput<KeyCode>>,
 ) {
     if events.is_empty() {
         return;
@@ -318,9 +320,20 @@ fn keyboard(
             }
 
             if let Key::Character(ref s) = event.logical_key {
+                let char = s.chars();
+                let should_paste = (keys.pressed(KeyCode::ControlLeft) || keys.pressed(KeyCode::ControlRight)) && s.contains('v');
+
                 let before = text_input.0.chars().take(cursor_pos.0);
                 let after = text_input.0.chars().skip(cursor_pos.0);
-                text_input.0 = before.chain(s.chars()).chain(after).collect();
+
+                if should_paste {
+                    let mut ctx: ClipboardContext = ClipboardContext::new().unwrap();
+                    let text = ctx.get_contents().unwrap_or_else(|_| String::new());
+
+                    text_input.0 = before.chain(text.chars()).chain(after).collect();
+                } else {
+                    text_input.0 = before.chain(s.chars()).chain(after).collect();
+                }
 
                 cursor_pos.0 += 1;
 

@@ -12,6 +12,9 @@ categories = ["game-development"]
 readme = "README.md"
 exclude = [".github"]
 
+[dependencies]
+copypasta = "0.10.1"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies.bevy]
